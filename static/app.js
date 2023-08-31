@@ -1,3 +1,7 @@
+// URL GeoJSON
+const geojsonURL =
+  "https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia.geojson";
+
 function initMap() {
   const indonesiaBounds = {
     north: 5.9075, // Garis Utara
@@ -23,10 +27,6 @@ function initMap() {
   };
 
   const map = new google.maps.Map(document.getElementById("map"), mapOptions);
-
-  // URL GeoJSON
-  const geojsonURL =
-    "https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia.geojson";
 
   // Fungsi untuk memuat dan menampilkan GeoJSON Provinsi Lampung
   function loadAndDisplayLampungGeoJSON() {
@@ -66,3 +66,51 @@ function initMap() {
 }
 
 window.initMap = initMap;
+
+// Fungsi untuk memuat seluruh provinsi
+function loadState() {
+  fetch(geojsonURL)
+    .then((response) => response.json())
+    .then((data) => {
+      //Looping nama provinsi
+      data.features.forEach(feature => {
+        console.log(feature.properties.state);
+      });
+
+
+    })
+    .catch((error) => {
+      console.error("Error loading GeoJSON:", error);
+    });
+}
+
+loadState();
+
+//Tombol Tambah
+$(document).on("click", ".addWilayah", function () {
+  let wilayahChild = `<div class="row wilayahChild mb-2">
+      <div class="col-sm-2 text-dark">
+        <button class="btn btn-info addWilayah">Add</button>
+      </div>
+      <div class="col-sm-2 text-dark">
+        <button class="btn btn-danger remWilayah">Rem</button>
+      </div>
+      <div class="col-sm-8">
+        <select
+          class="form-select daftarWilayah"
+          aria-label="Default select example"
+        >
+          <option selected>Open this select menu</option>
+          <option value="1">One</option>
+          <option value="2">Two</option>
+          <option value="3">Three</option>
+        </select>
+      </div>
+    </div>`;
+  $(".wilayahParent").append(wilayahChild);
+});
+
+//Tombol Kurang
+$(document).on("click", ".remWilayah", function () {
+  $(this).closest(".wilayahChild").remove();
+});
