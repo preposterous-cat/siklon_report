@@ -49,7 +49,7 @@ function initMap() {
         lampungDataLayer.setStyle({
           fillColor: "red",
           fillOpacity: 1,
-          strokeColor: "red",
+          strokeColor: "maroon",
           strokeWeight: 2,
         });
 
