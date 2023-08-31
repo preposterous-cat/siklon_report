@@ -1,0 +1,11 @@
+# Direktori Virtual Environment
+.venv/
+
+# File Log
+*.log
+
+# File Database SQLite
+*.sqlite
+
+# File Cache
+__pycache__/
