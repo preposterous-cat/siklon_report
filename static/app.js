@@ -2,70 +2,59 @@
 const geojsonURL =
   "https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia.geojson";
 
-function initMap() {
-  const indonesiaBounds = {
-    north: 5.9075, // Garis Utara
-    south: -10.9417, // Garis Selatan
-    west: 94.9722, // Garis Barat
-    east: 141.0458, // Garis Timur
-  };
+// Fungsi untuk memuat dan menampilkan GeoJSON Provinsi Lampung
+function loadAndDisplayLampungGeoJSON(map, daftarWilayah = []) {
+  fetch(geojsonURL)
+    .then((response) => response.json())
+    .then((data) => {
+      // Filter fitur yang sesuai dengan Provinsi Lampung (gantilah 'Lampung' sesuai dengan data Anda)
+      let lampungFeatures = data.features.filter((feature) =>
+        daftarWilayah.includes(feature.properties.state)
+      );
 
-  const mapOptions = {
-    center: { lat: -2.5489, lng: 118.0149 }, // Koordinat tengah Indonesia
-    restriction: {
-      latLngBounds: indonesiaBounds,
-      strictBounds: false,
-    },
-    zoom: 5, // Anda dapat menyesuaikan tingkat zoom sesuai kebutuhan
-    styles: [
-      {
-        featureType: "administrative",
-        elementType: "labels",
-        stylers: [{ visibility: "off" }],
-      },
-    ],
-  };
-
-  const map = new google.maps.Map(document.getElementById("map"), mapOptions);
-
-  // Fungsi untuk memuat dan menampilkan GeoJSON Provinsi Lampung
-  function loadAndDisplayLampungGeoJSON() {
-    fetch(geojsonURL)
-      .then((response) => response.json())
-      .then((data) => {
-        // Filter fitur yang sesuai dengan Provinsi Lampung (gantilah 'Lampung' sesuai dengan data Anda)
-        const lampungFeatures = data.features.filter((feature) =>
-          ["Sumatera Selatan", "Lampung"].includes(feature.properties.state)
-        );
-
-        // Buat objek Data Layer untuk menampilkan fitur-fitur tersebut
-        const lampungDataLayer = new google.maps.Data();
-        lampungDataLayer.addGeoJson({
-          type: "FeatureCollection",
-          features: lampungFeatures,
-        });
-
-        // Setel gaya atau warna polygon sesuai keinginan Anda
-        lampungDataLayer.setStyle({
+      // Buat layer GeoJSON
+      let lampungGeoJSON = L.geoJSON(lampungFeatures, {
+        style: {
           fillColor: "red",
           fillOpacity: 1,
-          strokeColor: "maroon",
-          strokeWeight: 2,
-        });
-
-        // Tambahkan Data Layer ke peta
-        lampungDataLayer.setMap(map);
-      })
-      .catch((error) => {
-        console.error("Error loading Lampung GeoJSON:", error);
+          color: "red",
+          weight: 2,
+        },
       });
-  }
 
-  // Panggil fungsi untuk memuat dan menampilkan GeoJSON Provinsi Lampung
-  loadAndDisplayLampungGeoJSON();
+      // Tambahkan layer GeoJSON ke peta
+      lampungGeoJSON.addTo(map);
+    })
+    .catch((error) => {
+      console.error("Error loading Lampung GeoJSON:", error);
+    });
 }
 
-window.initMap = initMap;
+// Inisialisasi peta
+let indonesiaBounds = [
+  [-10.9417, 94.9722], // Sudut Barat-Selatan
+  [5.9075, 141.0458], // Sudut Timur-Utara
+];
+
+let map = L.map("map", {
+  center: [-2.5489, 118.0149], // Koordinat tengah Indonesia
+  zoom: 5, // Tingkat zoom awal
+  maxZoom: 19,
+  maxBounds: indonesiaBounds, // Batas peta
+}); // Koordinat tengah Indonesia dan tingkat zoom
+
+L.tileLayer(
+  "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
+  {
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 20,
+  }
+).addTo(map);
+
+// Panggil fungsi untuk memuat dan menampilkan GeoJSON Provinsi Lampung
+loadAndDisplayLampungGeoJSON(map);
 
 // Fungsi untuk memuat seluruh provinsi
 function loadState() {
@@ -73,11 +62,19 @@ function loadState() {
     .then((response) => response.json())
     .then((data) => {
       //Looping nama provinsi
-      data.features.forEach(feature => {
-        console.log(feature.properties.state);
+      let optionWilayah = ``;
+      let arrayWilayah = [];
+      data.features.forEach((feature) => {
+        arrayWilayah.push(feature.properties.state);
+        // console.log(feature.properties.state);
+      });
+      arrayWilayah.sort();
+
+      arrayWilayah.forEach((wilayah) => {
+        optionWilayah += `<option value="${wilayah}">${wilayah}</option>`;
       });
 
-
+      $(".daftarWilayah").append(optionWilayah);
     })
     .catch((error) => {
       console.error("Error loading GeoJSON:", error);
@@ -88,22 +85,23 @@ loadState();
 
 //Tombol Tambah
 $(document).on("click", ".addWilayah", function () {
-  let wilayahChild = `<div class="row wilayahChild mb-2">
+  let daftarWilayah = $(".daftarWilayah").html();
+  let wilayahChild =
+    `<div class="row wilayahChild mb-2">
       <div class="col-sm-2 text-dark">
         <button class="btn btn-info addWilayah">Add</button>
       </div>
       <div class="col-sm-2 text-dark">
-        <button class="btn btn-danger remWilayah">Rem</button>
+        <button class="btn btn-danger remWilayah">Del</button>
       </div>
       <div class="col-sm-8">
         <select
           class="form-select daftarWilayah"
           aria-label="Default select example"
         >
-          <option selected>Open this select menu</option>
-          <option value="1">One</option>
-          <option value="2">Two</option>
-          <option value="3">Three</option>
+         ` +
+    daftarWilayah +
+    `
         </select>
       </div>
     </div>`;
@@ -113,4 +111,26 @@ $(document).on("click", ".addWilayah", function () {
 //Tombol Kurang
 $(document).on("click", ".remWilayah", function () {
   $(this).closest(".wilayahChild").remove();
+});
+
+//Tombol Process
+$(document).on("click", ".process", async function () {
+  let wilayahTerpilih = [];
+  $(".daftarWilayah").each(function () {
+    wilayahTerpilih.push($(this).val());
+  });
+
+  await loadAndDisplayLampungGeoJSON(map, wilayahTerpilih);
+
+  //Fungsi Capture Maps menjadi Image
+  let elementMap = $("#map");
+  console.log(elementMap);
+
+  html2canvas(elementMap[0], {
+    useCORS: true, // Tambahkan ini untuk mengaktifkan CORS
+  }).then(function (canvas) {
+    let image = canvas.toDataURL("image/png");
+
+    $("#image-temp").attr("src", image);
+  });
 });
