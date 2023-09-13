@@ -58,7 +58,10 @@ let map = L.map("map", {
   zoom: 5, // Tingkat zoom awal
   maxZoom: 19,
   maxBounds: indonesiaBounds, // Batas peta
+  renderer: L.svg()
+
 }); // Koordinat tengah Indonesia dan tingkat zoom
+
 
 L.tileLayer(
   "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
@@ -70,58 +73,165 @@ L.tileLayer(
   }
 ).addTo(map);
 
+let editableLayers = new L.FeatureGroup();
+map.addLayer(editableLayers);
+
+let options = {
+  position: 'topright',
+  draw: {
+    circle: true,
+    rectangle: true,
+    marker: true
+  },
+  edit: {
+    featureGroup: editableLayers, //REQUIRED!! 
+    remove: true
+  }
+};
+let drawControl = new L.Control.Draw(options);
+map.addControl(drawControl);
+
+//register events
+map.on(L.Draw.Event.CREATED, function (e) {
+  editableLayers.addLayer(e.layer);
+});
+
+
+//Map Color
+let myGeoJSONPath = "../static/geojson/world.geo.json";
+let myCustomStyle = {
+  stroke: false,
+  fill: true,
+  fillColor: '#E0b439',
+  fillOpacity: 1
+}
+$.getJSON(myGeoJSONPath, function (data) {
+  L.geoJson(data, {
+    clickable: false,
+    style: myCustomStyle
+  }).addTo(map);
+})
+
 L.easyPrint({
   title: "My awesome print button",
   position: "bottomright",
   sizeModes: ["Current", "A4Portrait", "A4Landscape"],
 }).addTo(map);
 
-// Buat elemen HTML Bootstrap untuk kotak pertama
-var popupContent = `
-    <div class="container" id="map-box">
-        <div class="row">
-            <div class="col">
-                <div class="alert alert-primary" role="alert">
-                    Ini adalah kotak Bootstrap di dalam peta Leaflet.
-                </div>
-            </div>
-        </div>
-    </div>
-`;
+//initialise the L.Draw.Svg.enable function with the svg we want to draw. here we can also include a dialog and such for selection
+L.Draw.Svg.include({
+  enable: function () {
+    let drawsvg = this;
 
-// Buat popup pertama dan tambahkan ke grup layer
-var popupGroup = L.layerGroup().addTo(map);
-var popup1 = L.popup({
-  closeButton: false,
-  autoPan: false,
-  autoClose: false,
-})
-  .setLatLng([centerCoordinates[0] - 13, centerCoordinates[1] - 20])
-  .setContent(popupContent);
-popupGroup.addLayer(popup1);
+    this._map.fire('modal', {
+      title: 'Open SVG',
+      content: [
+        'Select an SVG to show it on the map<br>',
+        '<table>',
+        '  <tr>',
+        '    <td>file:</td><td><input type="file" id="file-input" /></td>',
+        '  <tr></tr>',
+        '    <td>scale:</td><td><input type="number" id="scale" name="scale" min="0.000001" max="10.0" value="0.01"></td>',
+        '  </tr>',
+        '</table><br>'].join(''),
 
-// Buat elemen HTML Bootstrap untuk kotak kedua
-var popupContent2 = `
-    <div class="container" id="map-box2">
-        <div class="row">
-            <div class="col">
-                <div class="alert alert-primary" role="alert">
-                    Ini adalah kotak Bootstrap di dalam peta Leaflet.
-                </div>
-            </div>
-        </div>
-    </div>
-`;
+      template: [
+        '<div class="modal-header"><h2>{title}</h2></div>',
+        '<hr>',
+        '<div class="modal-body">{content}</div>',
+        '<div class="modal-footer">',
+        '  <button class="topcoat-button--large {OK_CLS}">{okText}</button>',
+        '  <button class="topcoat-button--large {CANCEL_CLS}">{cancelText}</button>',
+        '</div>'
+      ].join(''),
 
-// Buat popup kedua dan tambahkan ke grup layer
-var popup2 = L.popup({
-  closeButton: false,
-  autoPan: false,
-  autoClose: false,
-})
-  .setLatLng([centerCoordinates[0] - 13, centerCoordinates[1] + 20])
-  .setContent(popupContent2);
-popupGroup.addLayer(popup2);
+      okText: 'Ok',
+      cancelText: 'Cancel',
+      OK_CLS: 'modal-ok',
+      CANCEL_CLS: 'modal-cancel',
+
+      width: 300,
+
+      onShow: function (evt) {
+        let modal = evt.modal;
+        let imported = null;
+
+        L.DomEvent
+          .on(modal._container.querySelector('#file-input'), 'change', function (e) {
+            let file = e.target.files[0];
+            if (!file) {
+              return;
+            }
+            let reader = new FileReader();
+            reader.onload = function (e) {
+              imported = e.target.result;
+            };
+            reader.readAsText(file);
+          })
+          .on(modal._container.querySelector('.modal-ok'), 'click', function () {
+            if (imported != null) {
+              drawsvg._svgViewBox = "calculate";
+              drawsvg._svgFitBounds = true;
+              drawsvg._scale = modal._container.querySelector('#scale').valueAsNumber;
+              drawsvg._template = imported;
+              L.Draw.SimpleShape.prototype.enable.call(drawsvg);
+            }
+            modal.hide();
+          })
+          .on(modal._container.querySelector('.modal-cancel'), 'click', function () {
+            modal.hide();
+          });
+      }
+    });
+  }
+});
+
+// // Buat elemen HTML Bootstrap untuk kotak pertama
+// var popupContent = `
+//     <div class="container" id="map-box">
+//         <div class="row">
+//             <div class="col">
+//                 <div class="alert alert-primary" role="alert">
+//                     Ini adalah kotak Bootstrap di dalam peta Leaflet.
+//                 </div>
+//             </div>
+//         </div>
+//     </div>
+// `;
+
+// // Buat popup pertama dan tambahkan ke grup layer
+// var popupGroup = L.layerGroup().addTo(map);
+// var popup1 = L.popup({
+//   closeButton: false,
+//   autoPan: false,
+//   autoClose: false,
+// })
+//   .setLatLng([centerCoordinates[0] - 13, centerCoordinates[1] - 20])
+//   .setContent(popupContent);
+// popupGroup.addLayer(popup1);
+
+// // Buat elemen HTML Bootstrap untuk kotak kedua
+// var popupContent2 = `
+//     <div class="container" id="map-box2">
+//         <div class="row">
+//             <div class="col">
+//                 <div class="alert alert-primary" role="alert">
+//                     Ini adalah kotak Bootstrap di dalam peta Leaflet.
+//                 </div>
+//             </div>
+//         </div>
+//     </div>
+// `;
+
+// // Buat popup kedua dan tambahkan ke grup layer
+// var popup2 = L.popup({
+//   closeButton: false,
+//   autoPan: false,
+//   autoClose: false,
+// })
+//   .setLatLng([centerCoordinates[0] - 13, centerCoordinates[1] + 20])
+//   .setContent(popupContent2);
+// popupGroup.addLayer(popup2);
 
 // Buat kotak dengan batas koordinat yang telah dihitung
 // var rectangle = L.rectangle(bounds, {
