@@ -5,6 +5,11 @@
  #map {
     height: 100%;
   }
+
+  /* Gaya untuk menghilangkan tanda panah pada popup */
+.leaflet-popup-tip {
+  display: none;
+}
   
   /* 
    * Optional: Makes the sample page fill the window. 
