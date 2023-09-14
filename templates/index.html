@@ -38,7 +38,7 @@
       href="https://cdn.jsdelivr.net/npm/leaflet-modal@0.2.0/dist/leaflet.modal.min.css"
     />
     <link
-      href="{{ url_for('static', filename='leaflet.draw.svg.css') }}"
+      href="{{ url_for('static', filename='leaflet/leaflet.draw.svg.css') }}"
       rel="stylesheet"
       crossorigin=""
     />
@@ -49,7 +49,7 @@
       aria-label="Offcanvas navbar large"
     >
       <div class="container-fluid">
-        <a class="navbar-brand" href="#">Maps</a>
+        <a class="navbar-brand text-info" href="#">Cyclon Report</a>
         <button
           class="navbar-toggler"
           type="button"
@@ -156,10 +156,7 @@
       integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
       crossorigin="anonymous"
     ></script>
-    <script
-      type="module"
-      src="{{ url_for('static', filename='app.js') }}"
-    ></script>
+
     <!-- <script
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1MgLuZuyqR_OGY3ob3M52N46TDBRI_9k&callback=initMap&v=weekly"
       defer
@@ -190,6 +187,91 @@
       referrerpolicy="no-referrer"
     ></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-modal@0.2.0/dist/L.Modal.min.js"></script>
-    <script src="{{ url_for('static', filename='leaflet.draw.svg.js') }}"></script>
+    <script src="{{ url_for('static', filename='leaflet/leaflet.draw.svg.js') }}"></script>
+    <script>
+      L.Draw.Svg.include({
+        enable: function () {
+          let drawsvg = this;
+
+          this._map.fire("modal", {
+            title: "Open SVG",
+            content: [
+              "Select an SVG to show it on the map<br>",
+              "<table>",
+              "  <tr>",
+              '    <td>file:</td><td><input type="file" id="file-input" /></td>',
+              "  <tr></tr>",
+              '    <td>scale:</td><td><input type="number" id="scale" name="scale" min="0.000001" max="10.0" value="0.01"></td>',
+              "  </tr>",
+              "</table><br>",
+            ].join(""),
+
+            template: [
+              '<div class="modal-header"><h2>{title}</h2></div>',
+              "<hr>",
+              '<div class="modal-body">{content}</div>',
+              '<div class="modal-footer">',
+              '  <button class="topcoat-button--large {OK_CLS}">{okText}</button>',
+              '  <button class="topcoat-button--large {CANCEL_CLS}">{cancelText}</button>',
+              "</div>",
+            ].join(""),
+
+            okText: "Ok",
+            cancelText: "Cancel",
+            OK_CLS: "modal-ok",
+            CANCEL_CLS: "modal-cancel",
+
+            width: 500,
+
+            onShow: function (evt) {
+              let modal = evt.modal;
+              let imported = null;
+
+              L.DomEvent.on(
+                modal._container.querySelector("#file-input"),
+                "change",
+                function (e) {
+                  let file = e.target.files[0];
+                  if (!file) {
+                    return;
+                  }
+                  let reader = new FileReader();
+                  reader.onload = function (e) {
+                    imported = e.target.result;
+                  };
+                  reader.readAsText(file);
+                }
+              )
+                .on(
+                  modal._container.querySelector(".modal-ok"),
+                  "click",
+                  function () {
+                    if (imported != null) {
+                      drawsvg._svgViewBox = "calculate";
+                      drawsvg._svgFitBounds = true;
+                      drawsvg._scale =
+                        modal._container.querySelector("#scale").valueAsNumber;
+                      drawsvg._template = imported;
+                      L.Draw.SimpleShape.prototype.enable.call(drawsvg);
+                    }
+                    modal.hide();
+                  }
+                )
+                .on(
+                  modal._container.querySelector(".modal-cancel"),
+                  "click",
+                  function () {
+                    modal.hide();
+                  }
+                );
+            },
+          });
+        },
+      });
+    </script>
+    <script
+      type="module"
+      src="{{ url_for('static', filename='app.js') }}"
+    ></script>
   </body>
 </html>
