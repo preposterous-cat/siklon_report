@@ -94,6 +94,36 @@ map.on(L.Draw.Event.CREATED, function (e) {
   editableLayers.addLayer(e.layer);
 });
 
+// Buat polyline
+const coordinates = [
+  [-6.2088, 106.8456],
+  [-8.3405, 115.092],
+  [-7.797068, 110.370529],
+  // ... tambahkan koordinat lainnya di sini
+];
+
+const polyline = L.polyline(coordinates).addTo(map);
+
+// Tambahkan elemen SVG sebagai marker pada setiap titik koordinat dalam polyline
+coordinates.forEach((coord, index) => {
+  const text = `Titik ${index + 1}`; // Teks yang akan ditambahkan
+
+  const customIcon = L.divIcon({
+    className: "custom-icon-class",
+    html: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15">
+        <circle cx="20" cy="20" r="15" fill="blue" />
+      </svg>
+      <div class="custom-text rotated">${text}</div>
+    `,
+    iconSize: [40, 40], // Sesuaikan dengan ukuran SVG Anda
+  });
+  let marker = L.marker(coord, { icon: customIcon }).addTo(map);
+
+  // Tambahkan CSS untuk memutar teks sebesar 180 derajat
+  const rotatedText = marker._icon.querySelector(".rotated");
+  rotatedText.style.transform = "rotate(90deg)";
+});
 //Map Color
 let myGeoJSONPath = "../static/geojson/world.geo.json";
 let myCustomStyle = {

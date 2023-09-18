@@ -269,6 +269,17 @@
         },
       });
     </script>
+
+    <script src="{{ url_for('static', filename='leaflet/patternUtils.js') }}"></script>
+    <script src="{{ url_for('static', filename='leaflet/L.Symbol.js') }}"></script>
+    <script src="{{ url_for('static', filename='leaflet/L.PolylineDecorator.js') }}"></script>
+
+    <!-- <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.min.js"
+      integrity="sha512-2oK40N5b+8g4Fhp1rfdtmNaroXsh7tFN4OY6++9lB/Hb+uLQWmn0SSAXvnQfbn8BP8qtpri2YQLaFGpyzKUHow=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script> -->
     <script
       type="module"
       src="{{ url_for('static', filename='app.js') }}"
