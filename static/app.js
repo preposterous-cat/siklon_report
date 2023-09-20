@@ -57,7 +57,7 @@ let map = L.map("map", {
   center: centerCoordinates, // Koordinat tengah Indonesia
   zoom: 5, // Tingkat zoom awal
   maxZoom: 19,
-  maxBounds: indonesiaBounds, // Batas peta
+  // maxBounds: indonesiaBounds, // Batas peta
   renderer: L.svg(),
 }); // Koordinat tengah Indonesia dan tingkat zoom
 
@@ -74,12 +74,19 @@ L.tileLayer(
 let editableLayers = new L.FeatureGroup();
 map.addLayer(editableLayers);
 
+const customIcon = new L.Icon({
+  iconUrl: "static/images/water.svg", // Ganti dengan path menuju gambar PNG Anda
+  iconSize: [20, 20], // Sesuaikan dengan ukuran gambar
+});
+
 let options = {
   position: "topright",
   draw: {
     circle: true,
     rectangle: true,
-    marker: true,
+    marker: {
+      icon: customIcon, // Menggunakan ikon kustom yang sudah Anda buat
+    },
   },
   edit: {
     featureGroup: editableLayers, //REQUIRED!!
@@ -94,36 +101,6 @@ map.on(L.Draw.Event.CREATED, function (e) {
   editableLayers.addLayer(e.layer);
 });
 
-// Buat polyline
-const coordinates = [
-  [-6.2088, 106.8456],
-  [-8.3405, 115.092],
-  [-7.797068, 110.370529],
-  // ... tambahkan koordinat lainnya di sini
-];
-
-const polyline = L.polyline(coordinates).addTo(map);
-
-// Tambahkan elemen SVG sebagai marker pada setiap titik koordinat dalam polyline
-coordinates.forEach((coord, index) => {
-  const text = `Titik ${index + 1}`; // Teks yang akan ditambahkan
-
-  const customIcon = L.divIcon({
-    className: "custom-icon-class",
-    html: `
-      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15">
-        <circle cx="20" cy="20" r="15" fill="blue" />
-      </svg>
-      <div class="custom-text rotated">${text}</div>
-    `,
-    iconSize: [40, 40], // Sesuaikan dengan ukuran SVG Anda
-  });
-  let marker = L.marker(coord, { icon: customIcon }).addTo(map);
-
-  // Tambahkan CSS untuk memutar teks sebesar 180 derajat
-  const rotatedText = marker._icon.querySelector(".rotated");
-  rotatedText.style.transform = "rotate(90deg)";
-});
 //Map Color
 let myGeoJSONPath = "../static/geojson/world.geo.json";
 let myCustomStyle = {
@@ -132,18 +109,80 @@ let myCustomStyle = {
   fillColor: "#E0b439",
   fillOpacity: 1,
 };
-$.getJSON(myGeoJSONPath, function (data) {
-  L.geoJson(data, {
-    clickable: false,
-    style: myCustomStyle,
-  }).addTo(map);
-});
+
+function renderMap(coordinate = [], text = []) {
+  $.getJSON(myGeoJSONPath, function (data) {
+    L.geoJson(data, {
+      clickable: false,
+      style: myCustomStyle,
+    }).addTo(map);
+
+    // Buat polyline
+    const coordinates = coordinate;
+
+    const polyline = L.polyline(coordinates, {
+      color: "darkgrey", // Ganti dengan warna yang Anda inginkan
+    }).addTo(map);
+
+    // Tambahkan elemen SVG sebagai marker pada setiap titik koordinat dalam polyline
+    coordinates.forEach((coord, index) => {
+      const customIcon = L.divIcon({
+        className: "custom-icon-class",
+        html: `
+      <img src="static/images/cyclone.svg" alt="Marker" style="width:20px" />
+        <div class="custom-text rotated" style="margin: 5px;"><strong>${text[index]}</strong></div>
+      `,
+        iconSize: [40, 40], // Sesuaikan dengan ukuran SVG Anda
+      });
+      let marker = L.marker(coord, { icon: customIcon }).addTo(map);
+
+      // Tambahkan CSS untuk memutar teks sebesar 180 derajat
+      const rotatedText = marker._icon.querySelector(".rotated");
+      rotatedText.style.transform = "rotate(90deg)";
+    });
+
+    polyline.bringToFront();
+  });
+}
+
+renderMap();
 
 L.easyPrint({
   title: "My awesome print button",
   position: "bottomright",
   sizeModes: ["Current", "A4Portrait", "A4Landscape"],
 }).addTo(map);
+
+$("#upload-csv").on("submit", function (e) {
+  e.preventDefault();
+  var formData = new FormData(this);
+  // console.log(formData);
+  $.ajax({
+    type: "POST",
+    url: "/read_csv_report",
+    data: formData,
+    contentType: false,
+    processData: false,
+    success: function (data) {
+      // Tampilkan hasil pemrosesan di div "result"
+      let coordinates = [];
+      let text = [];
+      for (let index = 0; index < data.latitudes.length; index++) {
+        let coor = [data.latitudes[index], data.longitudes[index]];
+        coordinates.push(coor);
+        text.push(data.tanggal[index]);
+      }
+      renderMap(coordinates, text);
+      // $("#reset-plot").on("click", function () {
+      //   console.log("hellll");
+      //   renderMap();
+      // });
+    },
+    error: function () {
+      alert("Terjadi kesalahan dalam pengiriman data.");
+    },
+  });
+});
 
 //initialise the L.Draw.Svg.enable function with the svg we want to draw. here we can also include a dialog and such for selection
 

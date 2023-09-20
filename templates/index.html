@@ -106,7 +106,7 @@
       aria-labelledby="offcanvasRightLabel"
     >
       <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasRightLabel">Pilih wilayah</h5>
+        <h5 class="offcanvas-title" id="offcanvasRightLabel">Report Setting</h5>
         <button
           type="button"
           class="btn-close"
@@ -115,25 +115,59 @@
         ></button>
       </div>
       <div class="offcanvas-body">
-        <div class="wilayahParent">
-          <div class="row wilayahChild mb-2">
-            <div class="col-sm-2 text-dark">
-              <button class="btn btn-info addWilayah">Add</button>
-            </div>
-            <div class="col-sm-10">
-              <select
-                class="form-select daftarWilayah"
-                aria-label="Default select example"
-              >
-                <option selected>Pilih wilayah</option>
-              </select>
+        <div class="wilayahGranparent">
+          <div class="wilayahParent">
+            <h5 class="mb-4">Tandai Wilayah</h5>
+            <div class="row wilayahChild mb-2">
+              <div class="col-sm-2 text-dark">
+                <button class="btn btn-info addWilayah">Add</button>
+              </div>
+              <div class="col-sm-10">
+                <select
+                  class="form-select daftarWilayah"
+                  aria-label="Default select example"
+                >
+                  <option selected>Pilih wilayah</option>
+                </select>
+              </div>
             </div>
           </div>
+
+          <br />
+          <br />
+
+          <div class="row">
+            <button class="btn btn-primary process">Process</button>
+          </div>
         </div>
+        <hr />
+
         <br />
-        <br />
-        <div class="row">
-          <button class="btn btn-primary process">Process</button>
+
+        <div>
+          <h5>Tambahkan Plotter</h5>
+          <form
+            action="{{ url_for('read_csv_report') }}"
+            enctype="multipart/form-data"
+            id="upload-csv"
+          >
+            <div class="mb-3">
+              <label for="formFileMultiple" class="form-label"
+                >File (CSV)</label
+              >
+              <input
+                class="form-control"
+                name="file"
+                type="file"
+                id="formFileMultiple"
+                multiple
+              />
+            </div>
+            <button class="btn btn-primary" type="submit">Submit</button>
+            <!-- <button class="btn btn-primary" id="reset-plot" type="button">
+              Reset
+            </button> -->
+          </form>
         </div>
       </div>
     </div>
