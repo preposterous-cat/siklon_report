@@ -163,11 +163,19 @@
                 multiple
               />
             </div>
-            <button class="btn btn-primary" type="submit">Submit</button>
-            <!-- <button class="btn btn-primary" id="reset-plot" type="button">
+            <button id="btn-csv" class="btn btn-primary" type="submit">
+              Submit
+            </button>
+            <button class="btn btn-warning" id="reset-plot" type="button">
               Reset
-            </button> -->
+            </button>
           </form>
+        </div>
+        <div>
+          <input type="file" id="imageUpload" accept="image/*" />
+          <input type="number" id="iconWidth" placeholder="Lebar ikon" />
+          <input type="number" id="iconHeight" placeholder="Tinggi ikon" />
+          <button id="updateMarker">Update Marker</button>
         </div>
       </div>
     </div>
@@ -222,6 +230,7 @@
     ></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-modal@0.2.0/dist/L.Modal.min.js"></script>
     <script src="{{ url_for('static', filename='leaflet/leaflet.draw.svg.js') }}"></script>
+
     <script>
       L.Draw.Svg.include({
         enable: function () {
@@ -307,6 +316,7 @@
     <script src="{{ url_for('static', filename='leaflet/patternUtils.js') }}"></script>
     <script src="{{ url_for('static', filename='leaflet/L.Symbol.js') }}"></script>
     <script src="{{ url_for('static', filename='leaflet/L.PolylineDecorator.js') }}"></script>
+    <!-- <script src="https://unpkg.com/leaflet-imageoverlay@2.0.0/dist/leaflet-imageoverlay.js"></script> -->
 
     <!-- <script
       src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.min.js"
@@ -314,6 +324,12 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script> -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-editable/1.2.0/Leaflet.Editable.min.js"
+      integrity="sha512-QpANYNI4879TA/KVcjagBEb/XjOEzSg9Ge7DKWnLHEKaotUL0S0jOaKgxktFxsY7Lo5YTRXRFt/VHpEg4ifd5Q=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
     <script
       type="module"
       src="{{ url_for('static', filename='app.js') }}"

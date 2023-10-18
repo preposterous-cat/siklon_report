@@ -1,6 +1,6 @@
 // URL GeoJSON
 const geojsonURL =
-  "https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia.geojson";
+  "https://raw.githubusercontent.com/preposterous-cat/indonesia-geojson/master/indonesia.geojson";
 
 // Fungsi untuk memuat dan menampilkan GeoJSON Provinsi Lampung
 function loadAndDisplayLampungGeoJSON(map, daftarWilayah = []) {
@@ -75,15 +75,21 @@ let editableLayers = new L.FeatureGroup();
 map.addLayer(editableLayers);
 
 const customIcon = new L.Icon({
-  iconUrl: "static/images/water.svg", // Ganti dengan path menuju gambar PNG Anda
-  iconSize: [20, 20], // Sesuaikan dengan ukuran gambar
+  iconUrl: "static/images/myMap.png", // Ganti dengan path menuju gambar PNG Anda
+  iconSize: [200, 300], // Sesuaikan dengan ukuran gambar
 });
 
 let options = {
   position: "topright",
   draw: {
     circle: true,
-    rectangle: true,
+    rectangle: {
+      shapeOptions: {
+        color: "blue", // Warna stroke
+        fillColor: "yellow", // Warna fill
+        fillOpacity: 1,
+      },
+    },
     marker: {
       icon: customIcon, // Menggunakan ikon kustom yang sudah Anda buat
     },
@@ -110,6 +116,9 @@ let myCustomStyle = {
   fillOpacity: 1,
 };
 
+let addedLayers = {};
+let n = 0;
+
 function renderMap(coordinate = [], text = []) {
   $.getJSON(myGeoJSONPath, function (data) {
     L.geoJson(data, {
@@ -118,43 +127,60 @@ function renderMap(coordinate = [], text = []) {
     }).addTo(map);
 
     // Buat polyline
-    const coordinates = coordinate;
+    if (coordinate.length > 0) {
+      const coordinates = coordinate;
 
-    const polyline = L.polyline(coordinates, {
-      color: "darkgrey", // Ganti dengan warna yang Anda inginkan
-    }).addTo(map);
+      const polyline = L.polyline(coordinates, {
+        color: "darkgrey", // Ganti dengan warna yang Anda inginkan
+      }).addTo(map);
+      addedLayers[`polyline${n}`] = polyline;
+      let m = 0;
+      // Tambahkan elemen SVG sebagai marker pada setiap titik koordinat dalam polyline
+      coordinates.forEach((coord, index) => {
+        const customIcon = L.divIcon({
+          className: "custom-icon-class",
+          html: `
+          <img src="static/images/cyclone.svg" alt="Marker" style="width:20px" />
+            <div class="custom-text rotated" style="margin: 5px;"><strong>${text[index]}</strong></div>
+          `,
+          iconSize: [40, 40], // Sesuaikan dengan ukuran SVG Anda
+        });
+        let marker = L.marker(coord, { icon: customIcon }).addTo(map);
+        addedLayers[`marker${n}-${m}`] = marker;
 
-    // Tambahkan elemen SVG sebagai marker pada setiap titik koordinat dalam polyline
-    coordinates.forEach((coord, index) => {
-      const customIcon = L.divIcon({
-        className: "custom-icon-class",
-        html: `
-      <img src="static/images/cyclone.svg" alt="Marker" style="width:20px" />
-        <div class="custom-text rotated" style="margin: 5px;"><strong>${text[index]}</strong></div>
-      `,
-        iconSize: [40, 40], // Sesuaikan dengan ukuran SVG Anda
+        // Tambahkan CSS untuk memutar teks sebesar 180 derajat
+        const rotatedText = marker._icon.querySelector(".rotated");
+        rotatedText.style.transform = "rotate(90deg)";
+        m++;
       });
-      let marker = L.marker(coord, { icon: customIcon }).addTo(map);
 
-      // Tambahkan CSS untuk memutar teks sebesar 180 derajat
-      const rotatedText = marker._icon.querySelector(".rotated");
-      rotatedText.style.transform = "rotate(90deg)";
-    });
-
-    polyline.bringToFront();
+      polyline.bringToFront();
+      n++;
+    }
   });
 }
 
 renderMap();
-
+let igSize = {
+  width: 1080,
+  height: 1080,
+  className: "igSize",
+  name: "Instagram Size",
+  icon: "P",
+};
 L.easyPrint({
   title: "My awesome print button",
   position: "bottomright",
-  sizeModes: ["Current", "A4Portrait", "A4Landscape"],
+  exportOnly: true,
+  sizeModes: ["Current", "A4Portrait", "A4Landscape", igSize],
 }).addTo(map);
 
 $("#upload-csv").on("submit", function (e) {
   e.preventDefault();
+  $("#btn-csv").prop("disabled", true);
+  setTimeout(() => {
+    $("#btn-csv").prop("disabled", false);
+  }, 1000);
   var formData = new FormData(this);
   // console.log(formData);
   $.ajax({
@@ -173,10 +199,6 @@ $("#upload-csv").on("submit", function (e) {
         text.push(data.tanggal[index]);
       }
       renderMap(coordinates, text);
-      // $("#reset-plot").on("click", function () {
-      //   console.log("hellll");
-      //   renderMap();
-      // });
     },
     error: function () {
       alert("Terjadi kesalahan dalam pengiriman data.");
@@ -184,76 +206,22 @@ $("#upload-csv").on("submit", function (e) {
   });
 });
 
-//initialise the L.Draw.Svg.enable function with the svg we want to draw. here we can also include a dialog and such for selection
+$("#reset-plot").on("click", function () {
+  for (const layerId in addedLayers) {
+    const layer = addedLayers[layerId];
+    map.removeLayer(layer);
+  }
+  addedLayers = {}; // Kosongkan objek setelah menghapus
+  // Aktifkan mode edit
+  map.editable.enable();
+});
 
-// // Buat elemen HTML Bootstrap untuk kotak pertama
-// var popupContent = `
-//     <div class="container" id="map-box">
-//         <div class="row">
-//             <div class="col">
-//                 <div class="alert alert-primary" role="alert">
-//                     Ini adalah kotak Bootstrap di dalam peta Leaflet.
-//                 </div>
-//             </div>
-//         </div>
-//     </div>
-// `;
-
-// // Buat popup pertama dan tambahkan ke grup layer
-// var popupGroup = L.layerGroup().addTo(map);
-// var popup1 = L.popup({
-//   closeButton: false,
-//   autoPan: false,
-//   autoClose: false,
-// })
-//   .setLatLng([centerCoordinates[0] - 13, centerCoordinates[1] - 20])
-//   .setContent(popupContent);
-// popupGroup.addLayer(popup1);
-
-// // Buat elemen HTML Bootstrap untuk kotak kedua
-// var popupContent2 = `
-//     <div class="container" id="map-box2">
-//         <div class="row">
-//             <div class="col">
-//                 <div class="alert alert-primary" role="alert">
-//                     Ini adalah kotak Bootstrap di dalam peta Leaflet.
-//                 </div>
-//             </div>
-//         </div>
-//     </div>
-// `;
-
-// // Buat popup kedua dan tambahkan ke grup layer
-// var popup2 = L.popup({
-//   closeButton: false,
-//   autoPan: false,
-//   autoClose: false,
-// })
-//   .setLatLng([centerCoordinates[0] - 13, centerCoordinates[1] + 20])
-//   .setContent(popupContent2);
-// popupGroup.addLayer(popup2);
-
-// Buat kotak dengan batas koordinat yang telah dihitung
-// var rectangle = L.rectangle(bounds, {
-//   fillColor: "black", // Warna pengisian
-//   fillOpacity: 1, // Opasitas pengisian (0-1)
-//   color: "black", // Warna garis tepi
-//   weight: 2, // Ketebalan garis tepi
+// Tambahkan teks yang dapat diedit ke peta
+// const textLayer = L.Editable.Text([-2.5489, 118.0149], "Teks Anda di sini", {
+//   className: "custom-text-class", // Atur kelas CSS
+//   fontSize: "16px", // Atur ukuran font
+//   color: "blue", // Atur warna teks
 // }).addTo(map);
-
-// // Koordinat tengah kotak
-// var centerLatLng = bounds.getCenter();
-
-// // Buat L.divIcon dengan teks di dalamnya
-// var customIcon = L.divIcon({
-//   className: "custom-icon text-white m-auto",
-//   html: '<div style="text-align: center;">Teks di dalam Kotak</div>',
-//   iconSize: [100, 100], // Ukuran ikon (sesuaikan sesuai kebutuhan)
-//   iconAnchor: [50, 50], // Anchor di tengah ikon
-// });
-
-// // Buat marker dengan L.divIcon dan tambahkan ke peta
-// var textMarker = L.marker(centerLatLng, { icon: customIcon }).addTo(map);
 
 // Panggil fungsi untuk memuat dan menampilkan GeoJSON Provinsi Lampung
 loadAndDisplayLampungGeoJSON(map);
@@ -324,3 +292,39 @@ $(document).on("click", ".process", function () {
 
   loadAndDisplayLampungGeoJSON(map, wilayahTerpilih);
 });
+
+// Mendengarkan perubahan input dan memperbarui ikon marker
+document.getElementById("updateMarker").addEventListener("click", function () {
+  var fileImage = document.getElementById("imageUpload");
+  var iconWidth = parseInt(document.getElementById("iconWidth").value);
+  var iconHeight = parseInt(document.getElementById("iconHeight").value);
+
+  var file = fileImage.files[0];
+  var imageUrl = URL.createObjectURL(file);
+
+  // Validasi input
+  if (imageUrl && iconWidth && iconHeight) {
+    // Buat ikon baru dengan URL dan ukuran yang diinputkan
+    var customIcon = new L.Icon({
+      iconUrl: imageUrl,
+      iconSize: [iconWidth, iconHeight],
+    });
+
+    // Perbarui ikon marker pada opsi
+    drawControl.setDrawingOptions({
+      marker: {
+        icon: customIcon,
+      },
+    });
+
+    alert("Ikon marker telah diperbarui!");
+  } else {
+    alert("Mohon isi URL gambar, lebar, dan tinggi ikon.");
+  }
+});
+
+// // Gambar yang akan ditambahkan ke peta
+// var imageUrl = "static/images/myMap.png"; // Ganti dengan URL gambar PNG/JPG yang sesuai
+
+// // Buat lapisan gambar
+// var imageOverlay = L.imageOverlay(imageUrl, indonesiaBounds).addTo(map);
