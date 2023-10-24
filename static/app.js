@@ -75,8 +75,8 @@ let editableLayers = new L.FeatureGroup();
 map.addLayer(editableLayers);
 
 const customIcon = new L.Icon({
-  iconUrl: "static/images/myMap.png", // Ganti dengan path menuju gambar PNG Anda
-  iconSize: [200, 300], // Sesuaikan dengan ukuran gambar
+  iconUrl: "", // Ganti dengan path menuju gambar PNG Anda
+  iconSize: [0, 0], // Sesuaikan dengan ukuran gambar
 });
 
 let options = {
@@ -89,9 +89,6 @@ let options = {
         fillColor: "yellow", // Warna fill
         fillOpacity: 1,
       },
-    },
-    marker: {
-      icon: customIcon, // Menggunakan ikon kustom yang sudah Anda buat
     },
   },
   edit: {
@@ -116,10 +113,28 @@ let myCustomStyle = {
   fillOpacity: 1,
 };
 
+//Map Color
+let oceanGeoJSONPath = "../static/geojson/oceans.geojson";
+let oceanCustomStyle = {
+  stroke: true,
+  fill: true,
+  fillColor: "#F5F5F5",
+  color: "#F5F5F5",
+  fillOpacity: 1,
+  weight: 10, // Lebar garis (stroke) dalam piksel
+};
+
 let addedLayers = {};
 let n = 0;
+let COLOR = "black";
 
-function renderMap(coordinate = [], text = []) {
+function renderMap(coordinate = [], text = [], color = COLOR) {
+  $.getJSON(oceanGeoJSONPath, function (data) {
+    L.geoJson(data, {
+      clickable: false,
+      style: oceanCustomStyle,
+    }).addTo(map);
+  });
   $.getJSON(myGeoJSONPath, function (data) {
     L.geoJson(data, {
       clickable: false,
@@ -131,30 +146,58 @@ function renderMap(coordinate = [], text = []) {
       const coordinates = coordinate;
 
       const polyline = L.polyline(coordinates, {
-        color: "darkgrey", // Ganti dengan warna yang Anda inginkan
+        color: color, // Ganti dengan warna yang Anda inginkan
       }).addTo(map);
       addedLayers[`polyline${n}`] = polyline;
       let m = 0;
+
       // Tambahkan elemen SVG sebagai marker pada setiap titik koordinat dalam polyline
       coordinates.forEach((coord, index) => {
         const customIcon = L.divIcon({
           className: "custom-icon-class",
           html: `
+          <div style="margin:10px">
           <img src="static/images/cyclone.svg" alt="Marker" style="width:20px" />
             <div class="custom-text rotated" style="margin: 5px;"><strong>${text[index]}</strong></div>
-          `,
+          </div>
+            `,
           iconSize: [40, 40], // Sesuaikan dengan ukuran SVG Anda
         });
+
         let marker = L.marker(coord, { icon: customIcon }).addTo(map);
         addedLayers[`marker${n}-${m}`] = marker;
 
         // Tambahkan CSS untuk memutar teks sebesar 180 derajat
         const rotatedText = marker._icon.querySelector(".rotated");
         rotatedText.style.transform = "rotate(90deg)";
+
+        // Hitung jarak dalam piksel ke titik selanjutnya (jika bukan titik terakhir)
+        if (index < coordinates.length - 1) {
+          const nextCoord = coordinates[index + 1];
+
+          // Tambahkan arrowHead dengan offset yang dihitung
+          const arrowHead = L.polylineDecorator([coord, nextCoord], {
+            patterns: [
+              {
+                offset: "50%",
+                repeat: 0,
+                symbol: L.Symbol.arrowHead({
+                  pixelSize: 10,
+                  pathOptions: {
+                    color: color, // Ganti dengan warna yang diinginkan
+                    fillOpacity: 1,
+                    weight: 1, // Lebar garis
+                  },
+                }),
+              },
+            ],
+          }).addTo(map);
+          addedLayers[`arrowHead${n}-${m}`] = arrowHead;
+        }
         m++;
       });
 
-      polyline.bringToFront();
+      // polyline.bringToFront();
       n++;
     }
   });
@@ -322,6 +365,32 @@ document.getElementById("updateMarker").addEventListener("click", function () {
     alert("Mohon isi URL gambar, lebar, dan tinggi ikon.");
   }
 });
+
+// Fungsi untuk mengubah warna myCustomStyle
+$(".updateMap").on("click", function () {
+  const colorInputOcean = document.getElementById("ocean-color").value;
+  const colorInputIsland = document.getElementById("island-color").value;
+  oceanCustomStyle.color = colorInputOcean;
+  oceanCustomStyle.fillColor = colorInputOcean;
+  myCustomStyle.fillColor = colorInputIsland;
+  // Update peta dengan warna baru
+  reRenderMap();
+});
+
+$(".resetProcess").on("click", function () {
+  renderMap();
+});
+
+// Fungsi untuk memperbarui peta dengan warna yang diperbarui
+function reRenderMap() {
+  // Hapus lapisan yang ada
+  for (const key in addedLayers) {
+    map.removeLayer(addedLayers[key]);
+  }
+
+  // Render peta kembali dengan warna yang diperbarui
+  renderMap();
+}
 
 // // Gambar yang akan ditambahkan ke peta
 // var imageUrl = "static/images/myMap.png"; // Ganti dengan URL gambar PNG/JPG yang sesuai

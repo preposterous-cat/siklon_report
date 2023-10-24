@@ -115,6 +115,71 @@
         ></button>
       </div>
       <div class="offcanvas-body">
+        <div>
+          <h5 class="mb-4">Atur Peta</h5>
+          <!-- <div>
+            <label for="" class="fw-bold">Ukuran</label>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="exampleRadios"
+                id="exampleRadios1"
+                value="potrait"
+                checked
+              />
+              <label class="form-check-label" for="exampleRadios1">
+                Potrait
+              </label>
+            </div>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="exampleRadios"
+                id="exampleRadios2"
+                value="landscape"
+              />
+              <label class="form-check-label" for="exampleRadios2">
+                Landscape
+              </label>
+            </div>
+          </div> -->
+          <div class="row">
+            <div class="col-lg-6">
+              <label for="exampleColorInput" class="form-label fw-bold"
+                >Warna Pulau</label
+              >
+              <input
+                type="color"
+                class="form-control form-control-color"
+                id="island-color"
+                value="#E0b439"
+                title="Choose your color"
+              />
+            </div>
+            <div class="col-lg-6">
+              <label for="exampleColorInput" class="form-label fw-bold"
+                >Warna Air</label
+              >
+              <input
+                type="color"
+                class="form-control form-control-color"
+                id="ocean-color"
+                value="#F5F5F5"
+                title="Choose your color"
+              />
+            </div>
+          </div>
+
+          <br />
+          <div class="row">
+            <button class="btn btn-primary updateMap">Ubah</button>
+          </div>
+        </div>
+        <hr />
+        <br />
+
         <div class="wilayahGranparent">
           <div class="wilayahParent">
             <h5 class="mb-4">Tandai Wilayah</h5>
@@ -136,9 +201,8 @@
           <br />
           <br />
 
-          <div class="row">
-            <button class="btn btn-primary process">Process</button>
-          </div>
+          <button class="btn btn-primary process">Tandai</button>
+          <button class="btn btn-warning resetProcess">Reset</button>
         </div>
         <hr />
 
@@ -171,11 +235,43 @@
             </button>
           </form>
         </div>
+        <hr />
+
+        <br />
+
         <div>
-          <input type="file" id="imageUpload" accept="image/*" />
-          <input type="number" id="iconWidth" placeholder="Lebar ikon" />
-          <input type="number" id="iconHeight" placeholder="Tinggi ikon" />
-          <button id="updateMarker">Update Marker</button>
+          <h5>Impor Gambar (marker)</h5>
+          <div class="mb-3">
+            <label for="formFile" class="form-label">Pilih File Gambar</label>
+            <input
+              class="form-control"
+              type="file"
+              id="imageUpload"
+              accept="image/*"
+            />
+          </div>
+          <div class="mb-3 row">
+            <div class="col-lg-6">
+              <input
+                class="form-control"
+                type="number"
+                id="iconWidth"
+                placeholder="Lebar gambar"
+              />
+            </div>
+            <div class="col-lg-6">
+              <input
+                class="form-control"
+                type="number"
+                id="iconHeight"
+                placeholder="Tinggi gambar"
+              />
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="updateMarker">
+            Update Marker
+          </button>
         </div>
       </div>
     </div>
@@ -318,12 +414,12 @@
     <script src="{{ url_for('static', filename='leaflet/L.PolylineDecorator.js') }}"></script>
     <!-- <script src="https://unpkg.com/leaflet-imageoverlay@2.0.0/dist/leaflet-imageoverlay.js"></script> -->
 
-    <!-- <script
+    <script
       src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.min.js"
       integrity="sha512-2oK40N5b+8g4Fhp1rfdtmNaroXsh7tFN4OY6++9lB/Hb+uLQWmn0SSAXvnQfbn8BP8qtpri2YQLaFGpyzKUHow=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
-    ></script> -->
+    ></script>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-editable/1.2.0/Leaflet.Editable.min.js"
       integrity="sha512-QpANYNI4879TA/KVcjagBEb/XjOEzSg9Ge7DKWnLHEKaotUL0S0jOaKgxktFxsY7Lo5YTRXRFt/VHpEg4ifd5Q=="

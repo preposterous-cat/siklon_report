@@ -1,0 +1,1 @@
+These are GeoJSON and TopoJSON files for the world's oceans and geopolitical boundaries, as well as U.S.A. state boundaries. 
