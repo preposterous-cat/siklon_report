@@ -128,7 +128,7 @@ let addedLayers = {};
 let n = 0;
 let COLOR = "black";
 
-function renderMap(coordinate = [], text = [], color = COLOR) {
+function renderMap(coordinate = [], text = [], intensity = [], color = COLOR) {
   $.getJSON(oceanGeoJSONPath, function (data) {
     L.geoJson(data, {
       clickable: false,
@@ -156,9 +156,12 @@ function renderMap(coordinate = [], text = [], color = COLOR) {
         const customIcon = L.divIcon({
           className: "custom-icon-class",
           html: `
-          <div style="margin:10px">
-          <img src="static/images/cyclone.svg" alt="Marker" style="width:20px" />
-            <div class="custom-text rotated" style="margin: 5px;"><strong>${text[index]}</strong></div>
+          <div style="position: relative;margin:10px">
+            <div class="circle"></div> <!-- Lingkaran -->
+            <div class="intensity">${intensity[index]}</div>
+            <img src="static/images/tc.png" alt="Marker" style="width:20px" />
+            <div class="custom-text rotated" style="margin-top: -63px;margin-right: -30px;margin-left: -25px;
+            margin-bottom: -30px;;width:70px"><strong style="">${text[index]}</strong></div>
           </div>
             `,
           iconSize: [40, 40], // Sesuaikan dengan ukuran SVG Anda
@@ -169,7 +172,20 @@ function renderMap(coordinate = [], text = [], color = COLOR) {
 
         // Tambahkan CSS untuk memutar teks sebesar 180 derajat
         const rotatedText = marker._icon.querySelector(".rotated");
-        rotatedText.style.transform = "rotate(90deg)";
+        rotatedText.style.transform = "rotate(85deg)";
+        const circleElement = marker._icon.querySelector(".intensity");
+        circleElement.style.position = "absolute";
+        circleElement.style.top = "20%";
+        circleElement.style.left = "50%";
+        circleElement.style.width = "15px"; // Sesuaikan dengan ukuran yang Anda butuhkan
+        circleElement.style.height = "15px"; // Sesuaikan dengan ukuran yang Anda butuhkan
+        circleElement.style.transform = "translate(-50%, 10%)";
+        circleElement.style.backgroundColor = "white"; /* Fill putih */
+        circleElement.style.border = "2px solid black"; /* Stroke hitam */
+        circleElement.style.borderRadius = "50%"; /* Membuatnya lingkaran */
+        circleElement.style.textAlign = "center"; // Pusatkan teks
+        circleElement.style.lineHeight = "13px"; // Sesuaikan dengan ukuran yang Anda butuhkan
+        circleElement.style.fontWeight = "bold"; // Membuat teks menjadi tebal (bold)
 
         // Hitung jarak dalam piksel ke titik selanjutnya (jika bukan titik terakhir)
         if (index < coordinates.length - 1) {
@@ -236,12 +252,15 @@ $("#upload-csv").on("submit", function (e) {
       // Tampilkan hasil pemrosesan di div "result"
       let coordinates = [];
       let text = [];
+      let intensity = [];
       for (let index = 0; index < data.latitudes.length; index++) {
-        let coor = [data.latitudes[index], data.longitudes[index]];
+        let coor = [data.longitudes[index], data.latitudes[index]];
         coordinates.push(coor);
-        text.push(data.tanggal[index]);
+        text.push(data.tanggal[index] + " " + data.waktu[index]);
+        intensity.push(data.intensity[index]);
+        // console.log(text);
       }
-      renderMap(coordinates, text);
+      renderMap(coordinates, text, intensity);
     },
     error: function () {
       alert("Terjadi kesalahan dalam pengiriman data.");
